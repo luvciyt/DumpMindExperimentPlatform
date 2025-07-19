@@ -11,6 +11,16 @@ pub enum CompilerType {
     CLANG,
 }
 
+// impl Display trait for Enum::CompilerType
+impl fmt::Display for CompilerType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            CompilerType::GCC => write!(f, "gcc"),
+            CompilerType::CLANG => write!(f, "clang"),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct Compiler {
     pub compiler_type: CompilerType,
@@ -30,16 +40,6 @@ pub enum ParseCompilerError {
     VersionFormat(String),
     #[error("Unknown compiler type found: {0}")]
     UnknownCompiler(String),
-}
-
-// impl Display trait for Enum::CompilerType
-impl fmt::Display for CompilerType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            CompilerType::GCC => write!(f, "gcc"),
-            CompilerType::CLANG => write!(f, "clang"),
-        }
-    }
 }
 
 pub fn select_compiler(report: &CrashReport) -> Result<Compiler> {

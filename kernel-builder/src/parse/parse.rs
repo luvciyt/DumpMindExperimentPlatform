@@ -54,5 +54,5 @@ mod tests {
             .to_string_lossy()
             .into_owned();
         assert_eq!(path, "/home/luvciyt/Repo/DumpMindExperimentPlatform/kernel-builder/workspace/0b6b2d6d6cefa8b462930e55be699efba635788f/linux-02d5e016800d082058b3d3b7c3ede136cdc6ddcb".to_string())
-    }   
+    }
 }
