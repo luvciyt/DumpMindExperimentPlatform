@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use serde_with::serde_as;
 use serde_with::DurationSeconds;
+use serde_with::serde_as;
 use std::fs;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -90,4 +90,17 @@ fn load_config() -> Result<Config> {
     info!("Loaded configuration succeeded");
 
     Ok(config)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_default_config() {
+        let config = Config::default();
+        assert_eq!(config.proxy.host, "127.0.0.1");
+        assert_eq!(config.proxy.port, 9870);
+        assert_eq!(config.ssh.port, 22);
+    }
 }
