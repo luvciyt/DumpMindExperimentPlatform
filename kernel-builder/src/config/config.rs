@@ -1,0 +1,93 @@
+use anyhow::{Context, Result};
+use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
+use serde_with::DurationSeconds;
+use std::fs;
+use std::path::PathBuf;
+use std::time::Duration;
+use tracing::{error, info};
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Config {
+    pub proxy: ProxyConfig,
+    pub ssh: SSHConfig,
+}
+
+// proxy config
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ProxyConfig {
+    pub host: String,
+    pub port: u16,
+}
+
+// ssh config
+#[serde_as]
+#[derive(Debug, Deserialize, Serialize)]
+pub struct SSHConfig {
+    pub host: String,
+    pub port: u16,
+    pub user: String,
+    pub password: String,
+
+    #[serde_as(as = "DurationSeconds<u64>")]
+    pub timeout: Duration,
+
+    pub max_retries: usize,
+
+    #[serde_as(as = "DurationSeconds<u64>")]
+    pub initial_backoff: Duration,
+
+    #[serde_as(as = "DurationSeconds<u64>")]
+    pub max_backoff: Duration,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        load_config().unwrap_or_else(|e| {
+            error!(
+                "Failed to load config, using hardcoded default. Error: {:?}",
+                e
+            );
+            Config {
+                proxy: ProxyConfig {
+                    host: "127.0.0.1".to_string(),
+                    port: 7890,
+                },
+                ssh: SSHConfig {
+                    host: "127.0.0.1".to_string(),
+                    port: 22,
+                    user: "root".to_string(),
+                    password: "123456".to_string(),
+                    timeout: Duration::from_secs(30),
+                    max_retries: 5,
+                    initial_backoff: Duration::from_secs(1),
+                    max_backoff: Duration::from_secs(30),
+                },
+            }
+        })
+    }
+}
+
+// default load config from config/settings.toml
+fn load_config() -> Result<Config> {
+    let mut config_file = PathBuf::from(std::env::current_dir()?);
+    config_file.push("config");
+    config_file.push("settings.toml");
+
+    info!("Loading configuration from: {:?}", config_file);
+
+    let config_content = fs::read_to_string(&config_file)
+        .with_context(|| format!("Failed to read config file: {:?}", config_file))?;
+
+    info!(
+        "Loading configuration succeeded, File size: {} bytes",
+        config_content.len()
+    );
+
+    let config: Config = toml::from_str(&config_content)
+        .with_context(|| format!("Failed to parse config file: {:?}", config_file))?;
+
+    info!("Loaded configuration succeeded");
+
+    Ok(config)
+}
