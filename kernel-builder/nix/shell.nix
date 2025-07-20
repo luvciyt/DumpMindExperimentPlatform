@@ -76,19 +76,19 @@ let
             bintools
           ];
           hook = ''
-            echo "✅ Toolchain: Clang (LLVM version ${version})"
+            echo "   Toolchain: Clang (LLVM version ${version})"
             echo "   CC: $CC"
             echo "   CXX: $CXX"
             echo "   LD: ld.lld"
             ${if builtins.elem compiler [ "clang-8" "clang-9" "clang-10" "clang-11" ] then ''
-              echo "   📦 Channel: nixos-21.11 (for Clang ${version} support)"
-              echo "   ✅ Note: Using nixos-21.11 channel for Clang ${version} with compatible dependencies"
+              echo "       Channel: nixos-21.11 (for Clang ${version} support)"
+              echo "       Note: Using nixos-21.11 channel for Clang ${version} with compatible dependencies"
             '' else ""}
           '';
           makeFlags = "LLVM=1 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy STRIP=llvm-strip -j$(nproc)";
         }
       else
-        throw "❌ Error: Clang version '${version}' not found. Available versions: 8, 9, 10, 11 (from nixos-21.11), 12, 13, 14, 15, 16, 17, 18, 19"
+        throw "Error: Clang version '${version}' not found. Available versions: 8, 9, 10, 11 (from nixos-21.11), 12, 13, 14, 15, 16, 17, 18, 19"
     else
       # GCC 配置
       let
@@ -107,7 +107,7 @@ let
             if builtins.hasAttr gccAttr pkgs then
               pkgs.${gccAttr}
             else
-              throw "❌ Error: GCC version '${gccVersionStr}' not found. Available versions: 8 (from nixos-24.05), 9, 10, 11, 12, 13, 14";
+              throw "Error: GCC version '${gccVersionStr}' not found. Available versions: 8 (from nixos-24.05), 9, 10, 11, 12, 13, 14";
 
         # 使用选定的 GCC 创建 stdenv
         gccStdenv = pkgs.overrideCC pkgs.stdenv selectedGcc;
@@ -121,13 +121,13 @@ let
         hook = ''
           export CC=${toString selectedGcc}/bin/gcc
           export CXX=${toString selectedGcc}/bin/g++
-          echo "✅ Toolchain: GCC (Version: ${gccVersionStr})"
+          echo "   Toolchain: GCC (Version: ${gccVersionStr})"
           echo "   CC: $CC"
           echo "   CXX: $CXX"
           echo "   Binutils: ${pkgs.binutils}/bin"
           ${if gccVersionStr == "8" then ''
-            echo "   📦 Channel: nixos-24.05 (for GCC 8 support)"
-            echo "   ✅ Note: Using nixos-24.05 channel for GCC 8 with updated dependencies"
+            echo "      Channel: nixos-24.05 (for GCC 8 support)"
+            echo "      Note: Using nixos-24.05 channel for GCC 8 with updated dependencies"
           '' else ""}
         '';
         makeFlags = "-j$(nproc)";
@@ -153,13 +153,13 @@ toolchainConfig.stdenv.mkDerivation {
     export KBUILD_BUILD_USER="$USER"
 
     echo "========================================================"
-    echo "🔧 Kernel Build Environment Ready!"
+    echo "   Kernel Build Environment Ready!"
     echo ""
-    echo "📋 Environment Info:"
+    echo "   Environment Info:"
     echo "   Selected compiler: ${compiler}"
     echo "   Build flags: ${toolchainConfig.makeFlags}"
     echo ""
-    echo "🔍 Compiler Details:"
+    echo "  Compiler Details:"
     if [[ "${compiler}" == clang-* ]]; then
         clang --version | head -n1
         echo "   LLVM tools available: clang, lld, llvm-ar, llvm-nm, llvm-objcopy, llvm-strip"
@@ -168,13 +168,13 @@ toolchainConfig.stdenv.mkDerivation {
         echo "   Binutils version: $(ld --version | head -n1)"
     fi
     echo ""
-    echo "📚 Usage Examples:"
+    echo "   Usage Examples:"
     echo "   make ${toolchainConfig.makeFlags} defconfig"
     echo "   make ${toolchainConfig.makeFlags} menuconfig"
     echo "   make ${toolchainConfig.makeFlags} bzImage modules"
     echo "   make ${toolchainConfig.makeFlags} modules_install INSTALL_MOD_PATH=./install"
     echo ""
-    echo "🚀 Compiler Usage Examples:"
+    echo "   Compiler Usage Examples:"
     echo "   nix-shell --arg compiler '\"gcc-8\"'        # GCC 8"
     echo "   nix-shell --arg compiler '\"clang-8\"'      # Clang 8"
     echo "   nix-shell --arg compiler '\"clang-11\"'     # Clang 11"

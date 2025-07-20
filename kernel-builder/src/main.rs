@@ -1,7 +1,12 @@
-use kernel_builder::kernel::download::{download_bug, download_config, DownloadError};
+use kernel_builder::kernel::compile::make_kernel;
+use kernel_builder::kernel::download::{
+    download_bug, download_config, download_kernel, DownloadError,
+};
+use kernel_builder::kernel::modify::check_fix_config;
 use kernel_builder::parse::parse::parse_file;
 use std::sync::Arc;
 use tracing::{error, info, warn};
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt()
@@ -17,6 +22,13 @@ async fn main() {
 
     let path = "datasets/0b6b2d6d6cefa8b462930e55be699efba635788f.json";
     let report = Arc::new(parse_file(path).unwrap());
+
+    match download_kernel(&report).await {
+        Ok(()) => {}
+        Err(err) => {
+            error!("{}", err);
+        }
+    }
 
     let handle = {
         let report = Arc::clone(&report);
@@ -58,4 +70,18 @@ async fn main() {
     }
 
     println!("All tasks completed");
+
+    match check_fix_config(&report).await {
+        Ok(()) => {}
+        Err(err) => {
+            error!("{}", err);
+        }
+    }
+
+    match make_kernel(&report).await {
+        Ok(()) => {}
+        Err(err) => {
+            error!("{}", err);
+        }
+    }
 }
