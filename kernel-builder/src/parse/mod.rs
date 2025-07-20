@@ -1,3 +1,4 @@
 pub mod report;
 pub mod compiler;
-mod parse;
+pub mod parse;
+pub mod modify;

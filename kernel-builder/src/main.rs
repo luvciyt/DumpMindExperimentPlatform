@@ -1,35 +1,59 @@
-use std::env;
-use std::path::{PathBuf};
-use tokio::task;
-use kernel_builder::kernel::download::{decompress_file, download_file};
-
+use kernel_builder::kernel::download::{download_bug, download_config, DownloadError};
+use kernel_builder::parse::parse::parse_file;
+use std::sync::Arc;
+use tracing::{error, info, warn};
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt()
-        .with_target(true)                              // 显示模块路径
-        .with_thread_ids(true)                          // 显示线程 ID
-        .with_thread_names(true)                        // 显示线程名
-        .with_line_number(true)                         // 显示行号
-        .with_file(true)                                // 显示文件路径
-        .compact()                                      // 更紧凑格式（可改成 .pretty() 更易读）
+        .with_target(true)
+        .with_thread_ids(true)
+        .with_thread_names(true)
+        .with_line_number(true)
+        .with_file(true)
+        .pretty()
         .init();
+
     let mut handles = vec![];
 
-    let tar = PathBuf::from("linux1.tar.gz");
-    let path = PathBuf::from("linux2.tar.gz");
-    let handle = task::spawn(async move {
-        download_file("https://github.com/torvalds/linux/archive/eb7081409f94a9a8608593d0fb63a1aa3d6f95d8.tar.gz", &path, false).await.expect("Failed to download file");
-    });
+    let path = "datasets/0b6b2d6d6cefa8b462930e55be699efba635788f.json";
+    let report = Arc::new(parse_file(path).unwrap());
+
+    let handle = {
+        let report = Arc::clone(&report);
+        tokio::spawn(async move { download_bug(&report).await })
+    };
     handles.push(handle);
-    
-    let handle = task::spawn(async move {
-        decompress_file(&tar, &env::current_dir().unwrap()).await.expect("Failed to decompress file");
-    });
+
+    let handle = {
+        let report = Arc::clone(&report);
+        tokio::spawn(async move { download_config(&report).await })
+    };
     handles.push(handle);
 
     for handle in handles {
-        if let Err(e) = handle.await {
-            eprintln!("Task failed: {:?}", e);
+        match handle.await {
+            Err(join_err) => {
+                error!("任务 panic 或被取消: {:?}", join_err);
+            }
+            Ok(Err(err)) => {
+                // 判断是否是 DownloadError::FileExists 错误
+                if let Some(download_error) = err.downcast_ref::<DownloadError>() {
+                    match download_error {
+                        DownloadError::FileExists(path) => {
+                            warn!("文件已存在，跳过错误: {}", path);
+                            continue;
+                        }
+                        _ => {
+                            error!("任务失败: {:?}", err);
+                        }
+                    }
+                } else {
+                    error!("任务失败: {:?}", err);
+                }
+            }
+            Ok(Ok(())) => {
+                info!("任务成功");
+            }
         }
     }
 
