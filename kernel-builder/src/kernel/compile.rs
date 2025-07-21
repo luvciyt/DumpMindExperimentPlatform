@@ -1,4 +1,4 @@
-use crate::parse::compiler::{select_compiler, CompilerType};
+use crate::parse::compiler::{CompilerType, select_compiler};
 use crate::parse::parse::{build_path, kernel_source_path};
 use crate::parse::report::CrashReport;
 use anyhow::{Context, Result};
@@ -104,6 +104,10 @@ pub async fn make_kernel(report: &Arc<CrashReport>) -> Result<()> {
         .await
         .context("Failed to execute header install command")?;
 
+    Ok(())
+}
+
+pub async fn apply_patch(report: &Arc<CrashReport>) -> Result<()> {
     Ok(())
 }
 

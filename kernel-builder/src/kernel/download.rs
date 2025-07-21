@@ -199,7 +199,7 @@ pub async fn download_bug(report: &Arc<CrashReport>) -> Result<()> {
     );
 
     let build_dir = build_path(report);
-    let reproducer_path = build_dir.join("reproducer.c");
+    let reproducer_path = build_dir.join("bug.c");
 
     info!("Saving bug reproducer to: {}", reproducer_path.display());
 
