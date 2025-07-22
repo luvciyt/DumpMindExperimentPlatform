@@ -2,14 +2,17 @@
 [proxy]
 # proxy config
 host = "127.0.0.1"
-port = 7890
+port = 9870
 
 [ssh]
 host = "127.0.0.1"
-port = 22
-user = "luvciyt"
-password = "Wch8967?"
+port = 2222
+user = "root"
+key_path = "/home/luvciyt/Repo/DumpMindExperimentPlatform/kernel-builder/nix/debian-key"
 timeout = 30
 max_retries = 5
 initial_backoff = 1
 max_backoff = 30
+compression = false
+strict_host_key_checking = false
+keep_alive_interval = 60

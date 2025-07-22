@@ -29,3 +29,5 @@
 目前正在进行的工作是环境的配置与kernel-build这一部分的编写，目前已基本完成下载和编译linux内核，之后需要做的是配置ssh和qemu.
 
 `!TODO`:为 patch generate 和 recompile 留出接口并进行逻辑的编写 
+
+## date: 2025-7-17

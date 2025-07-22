@@ -1,7 +1,8 @@
+use crate::kvm::ssh::SSHError;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use serde_with::DurationSeconds;
 use serde_with::serde_as;
+use serde_with::DurationSeconds;
 use std::fs;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -22,12 +23,12 @@ pub struct ProxyConfig {
 
 // ssh config
 #[serde_as]
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SSHConfig {
     pub host: String,
     pub port: u16,
     pub user: String,
-    pub password: String,
+    pub key_path: PathBuf,
 
     #[serde_as(as = "DurationSeconds<u64>")]
     pub timeout: Duration,
@@ -39,6 +40,10 @@ pub struct SSHConfig {
 
     #[serde_as(as = "DurationSeconds<u64>")]
     pub max_backoff: Duration,
+    pub strict_host_key_checking: bool,
+    pub compression: bool,
+    #[serde_as(as = "Option<DurationSeconds<u64>>")]
+    pub keep_alive_interval: Option<Duration>,
 }
 
 impl Default for Config {
@@ -57,14 +62,33 @@ impl Default for Config {
                     host: "127.0.0.1".to_string(),
                     port: 22,
                     user: "root".to_string(),
-                    password: "123456".to_string(),
+                    key_path: PathBuf::from("~/.ssh/debian-key"),
                     timeout: Duration::from_secs(30),
                     max_retries: 5,
                     initial_backoff: Duration::from_secs(1),
                     max_backoff: Duration::from_secs(30),
+                    compression: false,
+                    strict_host_key_checking: false,
+                    keep_alive_interval: Some(Duration::from_secs(60)),
                 },
             }
         })
+    }
+}
+
+impl SSHConfig {
+    pub fn validate(&self) -> Result<(), SSHError> {
+        if self.host.is_empty() {
+            return Err(SSHError::ConnectionFailed(
+                "Host cannot be empty".to_string(),
+            ));
+        }
+        if self.max_retries == 0 {
+            return Err(SSHError::ConnectionFailed(
+                "Max retries must be greater than 0".to_string(),
+            ));
+        }
+        Ok(())
     }
 }
 
