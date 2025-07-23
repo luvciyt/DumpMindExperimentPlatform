@@ -39,5 +39,15 @@ pub struct VMConfig {
     pub ssh_port: u16,
     pub kernel_append: Option<String>,
     pub log_file: Option<String>,
-    
+    pub cpu_count: Option<u8>,
+    pub disk_format: DiskFormat,
 }
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum DiskFormat{
+    Raw,
+    Qcow2,
+    Vmdk,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]

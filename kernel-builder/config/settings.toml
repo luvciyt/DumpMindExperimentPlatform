@@ -2,7 +2,7 @@
 [proxy]
 # proxy config
 host = "127.0.0.1"
-port = 9870
+port = 7890
 
 [ssh]
 host = "127.0.0.1"
